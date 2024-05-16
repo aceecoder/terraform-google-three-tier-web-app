@@ -273,3 +273,29 @@ resource "google_cloud_run_service_iam_member" "noauth_fe" {
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
+
+resource "google_monitoring_uptime_check_config" "status_code" {
+  display_name = "http-uptime-check"
+  timeout      = "60s"
+  project  = var.project_id
+
+  http_check {
+    path = "/"
+    port = "80"
+    request_method = "GET"
+
+    accepted_response_status_codes {
+      status_class = "STATUS_CLASS_2XX"
+    }
+  }
+
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      project_id = var.project_id
+      host       = replace(google_cloud_run_service.fe.status[0].url,"/(https://)|(/)/","") 
+    }
+  }
+
+
+}
